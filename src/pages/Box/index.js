@@ -5,6 +5,7 @@ import api from "../../services/api";
 import { distanceInWords } from "date-fns";
 import pt from "date-fns/locale/pt";
 import Dropzone from "react-dropzone";
+import socket from "socket.io-client";
 
 import "./styles.css";
 
@@ -14,11 +15,31 @@ export default class Box extends Component {
   };
 
   async componentDidMount() {
+    this.subscribeToNewFiles();
+
     const box = this.props.match.params.id;
     const response = await api.get(`/boxes/${box}`);
 
     this.setState({ box: response.data });
   }
+
+  subscribeToNewFiles = () => {
+    const box = this.props.match.params.id;
+    const io = socket("https://omnistack-borgera.herokuapp.com");
+
+    io.emit("connectRoom", box);
+
+    console.log(this.state.data);
+
+    io.on("file", data => {
+      this.setState({
+        box: {
+          ...this.state.box,
+          files: [data, ...this.state.box.files]
+        }
+      });
+    });
+  };
 
   handleUpload = files => {
     files.forEach(file => {
