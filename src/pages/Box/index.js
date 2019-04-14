@@ -15,11 +15,21 @@ export default class Box extends Component {
 
   async componentDidMount() {
     const box = this.props.match.params.id;
-    debugger;
     const response = await api.get(`/boxes/${box}`);
 
     this.setState({ box: response.data });
   }
+
+  handleUpload = files => {
+    files.forEach(file => {
+      const data = new FormData();
+      const box = this.props.match.params.id;
+
+      data.append("file", file);
+
+      api.post(`boxes/${box}/files`, data);
+    });
+  };
 
   render() {
     return (
@@ -29,16 +39,28 @@ export default class Box extends Component {
           <h1>{this.state.box.title}</h1>
         </header>
 
-        <section>
-          <Dropzone>{(getRootProps, getInputProps) => <p>a</p>}</Dropzone>
-        </section>
+        <Dropzone onDrop={this.handleUpload}>
+          {({ getRootProps, getInputProps }) => (
+            <section>
+              <div className="upload" {...getRootProps()}>
+                <input {...getInputProps()} />
+                <p>Drag 'n' drop some files here, or click to select files</p>
+              </div>
+            </section>
+          )}
+        </Dropzone>
 
         <section>
           <ul>
             {this.state.box.files &&
               this.state.box.files.map(file => (
-                <li>
-                  <a className="fileInfo" href={file.url} target="_blank">
+                <li key={file._id}>
+                  <a
+                    className="fileInfo"
+                    href={file.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     <MdInsertDriveFile size={24} color="#A5CFFF" />
                     <strong>{file.title}</strong>
                   </a>
